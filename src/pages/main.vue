@@ -58,6 +58,7 @@
                                 :src = '`https://images.ygoprodeck.com/images/cards_cropped/${i.deckCoverCard1}.jpg`'
                                 :style = "{ '--size' : `${size}px` }"
                             ></image>
+                            <view style = 'width: 2%;'></view>
                         </template>
                         <template v-slot:footer>
                             <view class = 'footer'>
@@ -97,7 +98,10 @@
                         <uni-easyinput type = 'password' v-model = 'mc.signin_info.password' placeholder = '请输入密码' />
                     </uni-forms-item>
                     <view id = 'submit'>
-                        <button size = 'mini' @click = 'mc.signin()'>登陆</button>
+                        <button size = 'mini' @click = 'mc.signin()' v-show = '!mc.chk'>登陆</button>
+                        <button size = 'mini' v-show = 'mc.chk'>
+                            <uni-icons type = 'spinner-cycle'></uni-icons>
+                        </button>
                         <button size = 'mini' @click = 'mc.form.off()'>关闭</button>
                     </view>
                 </uni-forms>
@@ -126,6 +130,13 @@
             mc.chk = true;
             if (mc.signin_info.account.length <= 0 || mc.signin_info.password.length <= 0) return;
             mc.get = await MC.signin(mc.signin_info);
+            if (mc.get.user.id == 0) {
+                uni.showModal({
+                    title : '登陆失败',
+                    content : mc.get.error,
+                    showCancel : false
+                })
+            }
             mc.chk = false;
         },
         signout  : async () : Promise<void> => {
@@ -136,7 +147,8 @@
                     email : '',
                     avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
                 },
-                token : ''
+                token : '',
+                error : ''
             } as MyCardObject;
             await mc.form.off();
         },
@@ -315,8 +327,8 @@
     });
 
     onMounted(() => {
+        size.value = uni.getSystemInfoSync().windowWidth > uni.getSystemInfoSync().windowHeight ? uni.getSystemInfoSync().windowHeight / 14 : uni.getSystemInfoSync().windowHeight / 8;
         search.on();
-        size.value = uni.getSystemInfoSync().windowHeight / 8;
     })
  
 </script>

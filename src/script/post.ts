@@ -30,8 +30,9 @@ interface User {
 }
 
 interface MyCardObject {
-    user: User;
-    token: string;
+    user : User;
+    token : string;
+    error : string;
 }
 
 interface MyCardSigninObject {
@@ -63,7 +64,8 @@ class MyCard {
                     email : '',
                     avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
                 },
-                token : ''
+                token : '',
+                error : error.message
             } as MyCardObject;
         }
     }
