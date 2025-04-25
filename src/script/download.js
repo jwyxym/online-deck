@@ -6,7 +6,6 @@ const mode = {
 
 class DownloadFile {
     start = async (blob, fileName) => {
-        const url = URL.createObjectURL(blob);
         if (mode.h5) {
             if (window.showSaveFilePicker) {
                 let opts = {
@@ -26,6 +25,7 @@ class DownloadFile {
                 await writable.close();
                 return;
             } else {
+                const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = `${fileName}.ydk`;
