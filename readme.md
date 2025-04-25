@@ -1,4 +1,4 @@
-本项目基于[uniapp框架](https://uniapp.dcloud.net.cn/)
+本项目基于[uni-app框架](https://uniapp.dcloud.net.cn/)
 
 前置工作: (所需环境：node.js)
 ```bash
