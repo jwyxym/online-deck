@@ -248,8 +248,8 @@
             if (search.caches.keyWord != menu.search_info.keyWord || search.caches.contributor != menu.search_info.contributor) {
                 menu.search_info.page = 1;
             }
-            search.caches.keyWord = structuredClone(menu.search_info.keyWord);
-            search.caches.contributor = structuredClone(menu.search_info.contributor)
+            search.caches.keyWord = menu.search_info.keyWord;
+            search.caches.contributor = menu.search_info.contributor;
             const i = await onlineDecks.getList(menu.search_info);
             menu.data = i.menu;
             menu.total = i.total;
