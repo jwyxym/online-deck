@@ -41,8 +41,8 @@ $background-color-hover: #ecf5ff;
                 }
             }
             .body, .footer {
-                display: flex;
-                flex-direction: column;
+                display: grid;
+                font-size: 14px;
             }
         }
     }
