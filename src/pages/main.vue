@@ -88,8 +88,11 @@
                     <button size = 'mini' @click = 'deck.del()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
+                    <button @click = 'deck.update()' v-show = 'deck.app.user == mc.get.user.id'>
+                        上传并覆盖
+                    </button>
                 </uni-card>
-                <uni-card class = 'deck_body' is-full v-for = 'i in deck.app.export()' :title = '`${i.title} : ${i.content.length}`'>
+                <uni-card class = 'deck_body' is-full v-for = 'i in deck.app.export()' :title = '`${i.title} : ${i.content.length}`' v-show = '!deck.chk.reload'>
                     <image class = 'deck_cards' v-for = '(j, k) in i.content' :src = '`https://cdn.233.momobako.com/ygopro/pics/${j}.jpg!half`' mode = 'aspectFit' @error = 'changeImg(i, k)'></image>
                 </uni-card>
             </view>
@@ -165,12 +168,12 @@
         } as MyCardSigninObject,
         get : {
             user : {
-                id : 777668,
-                username : '今晚有宵夜吗',
-                email : 'jwyxym@126.com',
+                id : 0,
+                username : '',
+                email : '',
                 avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
             },
-            token : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Nzc3NjY4LCJpYXQiOjE3NDUzODcwNDksImV4cCI6MTc3NjkyMzA0OX0.pyyGtE_WjU8qtz1r2NKbe3jufsYW1PCk6wnczxuMHmM'
+            token : ''
         } as MyCardObject,
         clear : () : void => {
             mc.get = {
@@ -284,7 +287,8 @@
 
     let deck = reactive({
         chk : {
-            save : false
+            save : false,
+            reload : false
         },
         app : new Deck(),
         pattern: {
@@ -319,6 +323,19 @@
                 } as DeckObject);
                 mc.form.cache = 'page.deck';
                 mc.form.off();
+            });
+        },
+        update : async () : Promise<void> => {
+            if (mc.get.user.id == 0) return;
+            await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
+                const content : string = await Uniapp.readFile(res.tempFiles[0]);
+                deck.chk.reload = true;
+                await deck.app.read(content, {
+                    deckId : deck.app.id,
+                    deckName : deck.app.name,
+                    userId : mc.get.user.id
+                } as DeckObject);
+                deck.chk.reload = false;
             });
         },
         save : async () : Promise<void> => {
@@ -370,6 +387,7 @@
                         },
                         success : async (id : string) => {
                             page.deck = false;
+                            deck.app.clear();
                             await (new Promise(resolve => setTimeout(resolve, 500)));
                             await search.mydecks();
                             const index : number = menu.data.findIndex(i => i.deckId == id)
