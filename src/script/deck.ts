@@ -49,9 +49,7 @@ class Deck {
         ]
     };
     printBlob = () : Blob => {
-        const textData = [this.content];
-        const blob = new Blob(textData, { type: 'text/plain' });
-        return blob;
+        return new Blob([this.content], { type: 'application/ydk' });
     };
 }
 
