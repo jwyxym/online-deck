@@ -88,6 +88,10 @@
                     <button size = 'mini' @click = 'deck.del()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
+                    <button size = 'mini' @click = 'deck.public()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye'" v-show = 'deck.app.public'></uni-icons>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye-slash'" v-show = '!deck.app.public'></uni-icons>
+                    </button>
                     <br>
                     <button size = 'mini' @click = 'deck.update()' v-show = 'deck.app.user == mc.get.user.id'>
                         选择文件覆盖
@@ -289,7 +293,8 @@
     let deck = reactive({
         chk : {
             save : false,
-            reload : false
+            reload : false,
+            eye : true
         },
         app : new Deck(),
         pattern: {
@@ -350,14 +355,14 @@
             if (deck.chk.save || mc.get.user.id == 0) return;
             deck.chk.save = true;
             await onlineDecks.upload(deck.app, mc.get, {
-                error : (error : { message : string}) => {
+                error : (error : { message : string}) :void => {
                     uni.showModal({
                         title : '上传卡组失败',
                         content : error.message,
                         showCancel : false
                     })
                 },
-                success : async (id : string) => {
+                success : async (id : string) : Promise<void> => {
                     page.deck = false;
                     await (new Promise(resolve => setTimeout(resolve, 500)));
                     await search.mydecks();
@@ -386,14 +391,14 @@
                 success : async () => {
                     deck.chk.save = true;
                     await onlineDecks.upload(deck.app, mc.get, {
-                        error : (error : { message : string}) => {
+                        error : (error : { message : string}) : void => {
                             uni.showModal({
                                 title : '删除卡组失败',
                                 content : error.message,
                                 showCancel : false
                             })
                         },
-                        success : async (id : string) => {
+                        success : async (id : string) : Promise<void> => {
                             page.deck = false;
                             deck.app.clear();
                             await (new Promise(resolve => setTimeout(resolve, 500)));
@@ -407,6 +412,25 @@
                     }
                     , true)
                 }
+            })
+        },
+        public : async () : Promise<void> => {
+            if (deck.chk.save || mc.get.user.id == 0) return;
+            console.log(deck.app.public)
+            deck.chk.save = true;
+            await onlineDecks.public(deck.app.public, mc.get.user.id, deck.app.id, mc.get.token, {
+                error : (error : { message : string}) : void => {
+                    uni.showModal({
+                        title : deck.app.public ? '隐藏卡组失败' : '公开卡组失败',
+                        content : error.message,
+                        showCancel : false
+                    })
+                },
+                success : (pub : boolean) : void => {
+                    deck.app.public = pub;
+                    deck.chk.save = false;
+                    console.log(deck.app.public)
+                },
             })
         },
         download : async () : Promise<void> => {

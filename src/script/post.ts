@@ -21,6 +21,7 @@ interface DeckObject {
     deckCoverCard3 ?: number;
     deckProtector ?: number;
     lastDate ?: string;
+    public ?: boolean;
 }
 
 interface User {
@@ -210,6 +211,36 @@ class OnlineDecks {
             console.error(error);
             f.error(error);
             return '';
+        }
+    };
+    public = async (pub : boolean, userId : number, deckId : string, token : string, f : {
+        success : Function,
+        error : Function
+    } = {
+        success : () : void => { return; },
+        error : () : void => { return; }
+    }) : Promise<boolean>  => {
+        let response : { data : { message : boolean}};
+        try {
+            response = await axios.post(`${this.url}/api/mdpro3/deck/public`, {
+                userId : userId,
+                deckId : deckId,
+                isPublic : !pub
+            }, {
+                headers: { 
+                    'ReqSource': 'MDPro3',
+                    'token': token
+                }
+            });
+            if (!response.data.message)
+                throw new Error('更改失败');
+            f.success(!pub);
+            console.log(response)
+            return !pub;
+        } catch(error) {
+            console.error(error);
+            f.error(error);
+            return pub;
         }
     };
 

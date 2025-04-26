@@ -13,6 +13,7 @@ class Deck {
     case : number = 0;
     protector : number = 0;
     cover : Array<number> = [0, 0, 0];
+    public : boolean = false;
 
     clear = () : void => {
         this.main = [];
@@ -26,6 +27,7 @@ class Deck {
         this.case = 0;
         this.protector = 0;
         this.cover = [0, 0, 0];
+        this.public = false;
     };
     read = async (deck : string, i : DeckObject) : Promise<void> => {
         this.content = deck.replace(/^#{2,3}.*$\r?\n?/gm, '');
@@ -42,6 +44,7 @@ class Deck {
         this.case = i.deckCase?? 0;
         this.protector = i.deckProtector?? 0;
         this.cover = [i.deckCoverCard1?? 0, i.deckCoverCard2?? 0, i.deckCoverCard3?? 0];
+        this.public = i.public ?? false;
     };
     export = () : Array<{
         title : string;
