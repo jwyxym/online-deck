@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Deck from './deck.ts';
 
 interface postObject {
     page : number;
@@ -8,7 +9,7 @@ interface postObject {
     contributor : string;
 }
 
-interface listObject {
+interface DeckObject {
     deckCase : number;
     deckContributor : string;
     deckCoverCard1 : number;
@@ -32,7 +33,6 @@ interface User {
 interface MyCardObject {
     user : User;
     token : string;
-    error : string;
 }
 
 interface MyCardSigninObject {
@@ -47,7 +47,7 @@ class MyCard {
         this.url = url;
     }
 
-    signin = async (data : MyCardSigninObject) : Promise<MyCardObject> => {
+    signin = async (data : MyCardSigninObject, f : Function = () : void => { return; }) : Promise<MyCardObject> => {
         let response : {
             data : MyCardObject
         };
@@ -57,6 +57,7 @@ class MyCard {
         }
         catch(error) {
             console.error(error);
+            f(error);
             return {
                 user : {
                     id : 0,
@@ -65,7 +66,6 @@ class MyCard {
                     avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
                 },
                 token : '',
-                error : error.message
             } as MyCardObject;
         }
     }
@@ -79,10 +79,10 @@ class OnlineDecks {
     }
 
     getList = async (obj : postObject) : Promise<{
-        menu : Array<listObject>;
+        menu : Array<DeckObject>;
         total : number
     }>  => {
-        let response : { data : { data : { records : Array<listObject>, total : number }}};
+        let response : { data : { data : { records : Array<DeckObject>, total : number}}};
         try {
             response = await axios.get(`${this.url}/api/mdpro3/deck/list`, {
                 params: {
@@ -124,7 +124,7 @@ class OnlineDecks {
         }
     };
     like = async (deckId : string): Promise<boolean>  => {
-        let response : { data : { code : number }};
+        let response : { data : { code : number}};
         try {
             response = await axios.post(`${this.url}/api/mdpro3/deck/like/${deckId}`, {}, {
                 headers: { 
@@ -138,20 +138,21 @@ class OnlineDecks {
         }
     };
     getMyList = async (userId : number, token : string) : Promise<{
-        menu : Array<listObject>;
+        menu : Array<DeckObject>;
         total : number
     }>  => {
-        let response : { data : { data : { records : Array<listObject>, total : number }}};
+        let response : { data : { data : Array<DeckObject>}};
         try {
-            response = await axios.get(`${this.url}/api/mdpro3/sync/${userId}`, {
+            response = await axios.get(`${this.url}/api/mdpro3/sync/${userId}/nodel`, {
                 headers: { 
                     'ReqSource': 'MDPro3',
                     'token': token
                 }
             });
+            console.log(response)
             return {
-                menu : response.data.data.records,
-                total : response.data.data.total
+                menu : response.data.data,
+                total : response.data.data.length
             };
         } catch(error) {
             console.error(error);
@@ -159,6 +160,58 @@ class OnlineDecks {
                 menu : [],
                 total : 0
             };
+        }
+    };
+    upload = async (deck : Deck, i : MyCardObject, f : {
+        success : Function,
+        error : Function
+    } = {
+        success : () : void => { return; },
+        error : () : void => { return; }
+    }, isDelete : boolean = false) : Promise<string>  => {
+        let response : { data : { data : Boolean}};
+        try {
+            const id : { data : { data : string; } } = deck.id.length > 0 ? { data : { data : deck.id } } : await axios.get(`${this.url}/api/mdpro3/deck/deckId`, {
+                headers: { 
+                    'ReqSource': 'MDPro3',
+                }
+            });
+            if (!id.data.data)
+                throw new Error('卡组id获取失败');
+
+            const toDeck = (ydk : string) : string => {
+                return `${ydk}##${id.data}\r\n###${i.user.id}`
+            };
+
+            response = await axios.post(`${this.url}/api/mdpro3/sync/single`, {
+                deckContributor : i.user.username,
+                userId : i.user.id,
+                deck : {
+                    deckId : id.data.data,
+                    deckName : deck.name,
+                    deckCoverCard1 :  deck.cover[0],
+                    deckCoverCard2 :  deck.cover[1],
+                    deckCoverCard3 :  deck.cover[2],
+                    deckCase :  deck.case,
+                    deckProtector :  deck.protector,
+                    deckYdk : toDeck(deck.content),
+                    isDelete : isDelete
+                }
+            }, {
+                headers: { 
+                    'ReqSource': 'MDPro3',
+                    'token': i.token,
+                }
+            });
+            console.log(response)
+            if (!response.data.data)
+                throw new Error('卡组上传失败');
+            f.success(id.data.data);
+            return id.data.data;
+        } catch(error) {
+            console.error(error);
+            f.error(error);
+            return '';
         }
     };
 
@@ -169,7 +222,7 @@ const MC = new MyCard('https://sapi.moecube.com');
 
 export {
     postObject,
-    listObject,
+    DeckObject,
     onlineDecks,
     MyCardObject,
     MyCardSigninObject,

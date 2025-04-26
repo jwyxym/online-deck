@@ -75,12 +75,18 @@
         </view>
         <transition name = 'switch'>
             <view id = 'deck' v-show = 'page.deck'>
-                <uni-card id = 'deck_head' is-full :title = 'deck.app.name'>
+                <uni-card id = 'deck_head' is-full :title = "deck.app.name + '\n' + '上传者：' + deck.app.contributor">
                     <button size = 'mini' @click = 'deck.download()'>
                         <uni-icons type = 'download'></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.like.on()'>
+                    <button size = 'mini' @click = 'deck.like.on()' v-show = 'deck.app.user > 0'>
                         <uni-icons :type = 'deck.like.icon'></uni-icons>
+                    </button>
+                    <button size = 'mini' @click = 'deck.save()' v-show = 'deck.app.user == mc.get.user.id'>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'cloud-upload'"></uni-icons>
+                    </button>
+                    <button size = 'mini' @click = 'deck.del()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
                 </uni-card>
                 <uni-card class = 'deck_body' is-full v-for = 'i in deck.app.export()' :title = '`${i.title} : ${i.content.length}`'>
@@ -108,6 +114,7 @@
                 <view v-show = 'mc.get.user.id > 0'>
                     <uni-card :title = 'mc.get.user.username'>{{ mc.get.user.email }}</uni-card>
                     <uni-card class = 'button' @click = 'search.mydecks()'>我的卡组</uni-card>
+                    <uni-card class = 'button' @click = 'deck.upload()'>上传卡组</uni-card>
                     <view id = 'submit'>
                         <button size = 'mini' @click = 'mc.signout()'>退出</button>
                         <button size = 'mini' @click = 'mc.form.off()'>关闭</button>
@@ -119,8 +126,9 @@
 </template>
 <script setup lang = 'ts'>
     import { ref, reactive, watch, onMounted } from 'vue';
-    import { onlineDecks, postObject, listObject, MC, MyCardObject, MyCardSigninObject } from '../script/post.ts';
-    import { Deck, DeckObject } from '../script/deck.ts';
+    import { onlineDecks, postObject, DeckObject, MC, MyCardObject, MyCardSigninObject } from '../script/post.ts';
+    import Deck from '../script/deck.ts';
+    import Uniapp from '../script/uniapp.ts';
     import Download from '../script/download.js';
 
     let mc = reactive({
@@ -129,14 +137,13 @@
             if (mc.chk) return;
             mc.chk = true;
             if (mc.signin_info.account.length <= 0 || mc.signin_info.password.length <= 0) return;
-            mc.get = await MC.signin(mc.signin_info);
-            if (mc.get.user.id == 0) {
+            mc.get = await MC.signin(mc.signin_info, (error : { message : string; }) => {
                 uni.showModal({
                     title : '登陆失败',
-                    content : mc.get.error,
+                    content : error.message,
                     showCancel : false
                 })
-            }
+            });
             mc.chk = false;
         },
         signout  : async () : Promise<void> => {
@@ -158,12 +165,12 @@
         } as MyCardSigninObject,
         get : {
             user : {
-                id : 0,
-                username : '',
-                email : '',
+                id : 777668,
+                username : '今晚有宵夜吗',
+                email : 'jwyxym@126.com',
                 avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
             },
-            token : ''
+            token : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Nzc3NjY4LCJpYXQiOjE3NDUzODcwNDksImV4cCI6MTc3NjkyMzA0OX0.pyyGtE_WjU8qtz1r2NKbe3jufsYW1PCk6wnczxuMHmM'
         } as MyCardObject,
         clear : () : void => {
             mc.get = {
@@ -200,9 +207,7 @@
     });
 
     let menu = reactive({
-        data : [] as Array<listObject>,
-        favourite : async () : Promise<void> => {
-        },
+        data : [] as Array<DeckObject>,
         select : {
             data : [{
                 text: '无排序',
@@ -256,12 +261,13 @@
             search.reset();
         },
         mydecks : async() : Promise<void> => {
-            if (search.isLoading()) return;
+            if (search.isLoading() || mc.get.user.id == 0) return;
             search.loading();
             const i = await onlineDecks.getMyList(mc.get.user.id, mc.get.token);
             menu.data = i.menu;
             menu.total = i.total;
             search.reset();
+            mc.form.cache = 'page.menu';
             await mc.form.off();
         },
         caches : {
@@ -277,14 +283,16 @@
     });
 
     let deck = reactive({
-        chking : false,
+        chk : {
+            save : false
+        },
         app : new Deck(),
         pattern: {
             buttonColor: '#ecf5ff',
             iconColor: '#409eff',
             icon : 'closeempty'
         },
-        on : async (i : listObject) : Promise<void> => {
+        on : async (i : DeckObject) : Promise<void> => {
             if (!page.menu) return;
             page.menu = false;
             const response = await onlineDecks.getDeck(i.deckId);
@@ -298,6 +306,82 @@
             deck.app.clear();
             await (new Promise(resolve => setTimeout(resolve, 500)));
             page.menu = true;
+        },
+        upload : async () : Promise<void> => {
+            if (mc.get.user.id == 0) return;
+            await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
+                const name : string = res.tempFiles[0].name.split('.')[0];
+                const content : string = await Uniapp.readFile(res.tempFiles[0]);
+                await deck.app.read(content, {
+                    deckId : '',
+                    deckName : name,
+                    userId : mc.get.user.id
+                } as DeckObject);
+                mc.form.cache = 'page.deck';
+                mc.form.off();
+            });
+        },
+        save : async () : Promise<void> => {
+            if (deck.chk.save || mc.get.user.id == 0) return;
+            deck.chk.save = true;
+            await onlineDecks.upload(deck.app, mc.get, {
+                error : (error : { message : string}) => {
+                    uni.showModal({
+                        title : '上传卡组失败',
+                        content : error.message,
+                        showCancel : false
+                    })
+                },
+                success : async (id : string) => {
+                    page.deck = false;
+                    await (new Promise(resolve => setTimeout(resolve, 500)));
+                    await search.mydecks();
+                    if (!menu.data.some(i => i.deckId == id))
+                        menu.data.push({
+                            deckCase : deck.app.case,
+                            deckContributor : deck.app.contributor,
+                            deckCoverCard1 : deck.app.cover[0],
+                            deckCoverCard2 : deck.app.cover[1],
+                            deckCoverCard3 : deck.app.cover[2],
+                            deckId : deck.app.id,
+                            deckLike : 0,
+                            deckName : deck.app.name,
+                            deckProtector : deck.app.protector,
+                            lastDate: getCurrentDate(),
+                            userId : mc.get.user.id,
+                        })
+                    deck.chk.save = false;
+                },
+            })
+        },
+        del : () : void => {
+            if (deck.chk.save || mc.get.user.id == 0) return;
+            uni.showModal({
+                title : '确认要删除吗？',
+                success : async () => {
+                    deck.chk.save = true;
+                    await onlineDecks.upload(deck.app, mc.get, {
+                        error : (error : { message : string}) => {
+                            uni.showModal({
+                                title : '删除卡组失败',
+                                content : error.message,
+                                showCancel : false
+                            })
+                        },
+                        success : async (id : string) => {
+                            page.deck = false;
+                            await (new Promise(resolve => setTimeout(resolve, 500)));
+                            await search.mydecks();
+                            const index : number = menu.data.findIndex(i => i.deckId == id)
+                            if (index > -1) {
+                                menu.data.splice(index, 1);
+                            }
+                            deck.chk.save = false;
+                        },
+                    }
+                    , true)
+                }
+            })
         },
         download : async () : Promise<void> => {
             await Download.start(deck.app.printBlob(), deck.app.name);
@@ -315,8 +399,19 @@
         }
     });
 
-    const changeImg = (i : DeckObject, v : number) => {
+    const changeImg = (i : {
+        title : string;
+        content : Array<string>
+    }, v : number) => {
         i.content[v] = '0';
+    }
+
+    const getCurrentDate = () : string => {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     let size = ref(0);
@@ -333,6 +428,7 @@
  
 </script>
 <style scoped lang = 'scss'>
+    @import '@/uni_modules/uni-scss/index.scss';
     @import '../style/page.scss';
 
     .switch-enter-active,

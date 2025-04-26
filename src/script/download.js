@@ -31,7 +31,7 @@ class DownloadFile {
                 link.download = `${fileName}.ydk`;
                 link.click();
                 setTimeout(() => {
-                    document.body.removeChild(a);
+                    document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                 }, 10000);
                 return;
