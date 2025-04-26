@@ -88,8 +88,9 @@
                     <button size = 'mini' @click = 'deck.del()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
-                    <button @click = 'deck.update()' v-show = 'deck.app.user == mc.get.user.id'>
-                        上传并覆盖
+                    <br>
+                    <button size = 'mini' @click = 'deck.update()' v-show = 'deck.app.user == mc.get.user.id'>
+                        选择文件覆盖
                     </button>
                 </uni-card>
                 <uni-card class = 'deck_body' is-full v-for = 'i in deck.app.export()' :title = '`${i.title} : ${i.content.length}`' v-show = '!deck.chk.reload'>
@@ -319,7 +320,8 @@
                 await deck.app.read(content, {
                     deckId : '',
                     deckName : name,
-                    userId : mc.get.user.id
+                    userId : mc.get.user.id,
+                    deckContributor : mc.get.user.username
                 } as DeckObject);
                 mc.form.cache = 'page.deck';
                 mc.form.off();
@@ -330,10 +332,16 @@
             await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
                 const content : string = await Uniapp.readFile(res.tempFiles[0]);
                 deck.chk.reload = true;
+                uni.showModal({
+                    title : '已覆盖新的卡组',
+                    content : '需要点击上传才能保存到云端哦',
+                    showCancel : false
+                })
                 await deck.app.read(content, {
                     deckId : deck.app.id,
                     deckName : deck.app.name,
-                    userId : mc.get.user.id
+                    userId : mc.get.user.id,
+                    deckContributor : deck.app.contributor
                 } as DeckObject);
                 deck.chk.reload = false;
             });

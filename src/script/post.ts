@@ -10,17 +10,17 @@ interface postObject {
 }
 
 interface DeckObject {
-    deckCase : number;
-    deckContributor : string;
-    deckCoverCard1 : number;
-    deckCoverCard2 : number;
-    deckCoverCard3 : number;
     deckId : string;
-    deckLike : number;
     deckName : string;
-    deckProtector : number;
-    lastDate: string;
     userId : number;
+    deckContributor : string;
+    deckLike ?: number;
+    deckCase ?: number;
+    deckCoverCard1 ?: number;
+    deckCoverCard2 ?: number;
+    deckCoverCard3 ?: number;
+    deckProtector ?: number;
+    lastDate ?: string;
 }
 
 interface User {

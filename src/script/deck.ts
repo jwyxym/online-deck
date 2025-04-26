@@ -39,9 +39,9 @@ class Deck {
         this.name = i.deckName;
         this.contributor = i.deckContributor;
         this.user = i.userId;
-        this.case = i.deckCase;
-        this.protector = i.deckProtector;
-        this.cover = [i.deckCoverCard1, i.deckCoverCard2, i.deckCoverCard3];
+        this.case = i.deckCase?? 0;
+        this.protector = i.deckProtector?? 0;
+        this.cover = [i.deckCoverCard1?? 0, i.deckCoverCard2?? 0, i.deckCoverCard3?? 0];
     };
     export = () : Array<{
         title : string;
