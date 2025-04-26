@@ -149,7 +149,6 @@ class OnlineDecks {
                     'token': token
                 }
             });
-            console.log(response)
             return {
                 menu : response.data.data,
                 total : response.data.data.length
@@ -203,7 +202,6 @@ class OnlineDecks {
                     'token': i.token,
                 }
             });
-            console.log(response)
             if (!response.data.data)
                 throw new Error('卡组上传失败');
             f.success(id.data.data);
