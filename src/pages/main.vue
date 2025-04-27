@@ -22,10 +22,10 @@
             </uni-card>
             <uni-list id = 'lognin'>
                 <uni-list-chat
-                avatar-circle = true
+                :avatar-circle = true
                 :title = 'mc.get.user.username'
                 :note = 'mc.get.user.email'
-                clickable = true
+                :clickable = true
                 :time = "mc.get.user.id <= 0 ? '登陆萌卡' : ''"
                 :avatar = 'mc.get.user.avatar'
                 @click = 'mc.form.on()'
@@ -50,7 +50,7 @@
                         :title = 'i.name'
                         :note = 'i.contributor'
                         class = 'uni-list-item'
-                        clickable = true
+                        :clickable = true
                         @click = 'deck.on(i, v)'
                     >
                         <template v-slot:header>
