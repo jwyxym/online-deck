@@ -39,32 +39,32 @@
         <transition name = 'switch'>
             <uni-fab :pattern = 'deck.pattern' @fabClick = 'deck.off()' v-show = 'page.deck'/>
         </transition>
-        <view id = 'list'>
+        <view id = 'list' v-if = 'menu.data.length > 0'>
             <transition name = 'switch'>
                 <uni-pagination :current = 'menu.search_info.page' v-model = 'menu.search_info.page' pageSize = 20 :total = 'menu.total' @change = 'search.on' v-show = 'page.menu && !search.isLoading()'></uni-pagination>
             </transition>
             <transition name = 'switch'>
-                <uni-list id = 'uni-list' v-show = 'menu.data.length > 0 && !search.isLoading() && page.menu'>
+                <uni-list id = 'uni-list' v-show = '!search.isLoading() && page.menu'>
                     <uni-list-item
                         v-for = '(i, v) in menu.data'
-                        :title = 'i.deckName'
-                        :note = 'i.deckContributor'
+                        :title = 'i.name'
+                        :note = 'i.contributor'
                         class = 'uni-list-item'
                         clickable = true
-                        @click = 'deck.on(i)'
+                        @click = 'deck.on(i, v)'
                     >
                         <template v-slot:header>
                             <image
-                                :src = '`https://images.ygoprodeck.com/images/cards_cropped/${i.deckCoverCard1}.jpg`'
+                                :src = '`https://images.ygoprodeck.com/images/cards_cropped/${i.cover[0]}.jpg`'
                                 :style = "{ '--size' : `${size}px` }"
                             ></image>
                             <view style = 'width: 2%;'></view>
                         </template>
                         <template v-slot:footer>
                             <view class = 'footer'>
-                                <span>{{ i.lastDate }}</span>
+                                <span>{{ i.date }}</span>
                                 <view>
-                                    <span>{{ i.deckLike }}</span>
+                                    <span>{{ i.like }}</span>
                                     <uni-icons type = 'hand-up'></uni-icons>
                                 </view>
                             </view>
@@ -74,30 +74,30 @@
             </transition>
         </view>
         <transition name = 'switch'>
-            <view id = 'deck' v-show = 'page.deck'>
-                <uni-card id = 'deck_head' is-full :title = "deck.app.name + '\n' + '上传者：' + deck.app.contributor">
+            <view id = 'deck' v-if = 'page.deck && deck.select > -1'>
+                <uni-card id = 'deck_head' is-full :title = "menu.data[deck.select].name + '\n' + '上传者：' + menu.data[deck.select].contributor">
                     <button size = 'mini' @click = 'deck.download()'>
                         <uni-icons type = 'download'></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.like.on()' v-show = 'deck.app.user > 0'>
+                    <button size = 'mini' @click = 'deck.like.on()' v-show = 'menu.data[deck.select].user > 0'>
                         <uni-icons :type = 'deck.like.icon'></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.save()' v-show = 'deck.app.user == mc.get.user.id'>
+                    <button size = 'mini' @click = 'deck.save()' v-show = 'menu.data[deck.select].user == mc.get.user.id'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'cloud-upload'"></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.del()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
+                    <button size = 'mini' @click = 'deck.del()' v-show = 'menu.data[deck.select].user == mc.get.user.id && menu.data[deck.select].id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.public()' v-show = 'deck.app.user == mc.get.user.id && deck.app.id.length > 0'>
-                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye'" v-show = 'deck.app.public'></uni-icons>
-                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye-slash'" v-show = '!deck.app.public'></uni-icons>
+                    <button size = 'mini' @click = 'deck.public()' v-show = 'menu.data[deck.select].user == mc.get.user.id && menu.data[deck.select].id.length > 0'>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye'" v-show = 'menu.data[deck.select].public'></uni-icons>
+                        <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye-slash'" v-show = '!menu.data[deck.select].public'></uni-icons>
                     </button>
                     <br>
-                    <button size = 'mini' @click = 'deck.update()' v-show = 'deck.app.user == mc.get.user.id'>
+                    <button size = 'mini' @click = 'deck.update()' v-show = 'menu.data[deck.select].user == mc.get.user.id'>
                         选择文件覆盖
                     </button>
                 </uni-card>
-                <uni-card class = 'deck_body' is-full v-for = 'i in deck.app.export()' :title = '`${i.title} : ${i.content.length}`' v-show = '!deck.chk.reload'>
+                <uni-card class = 'deck_body' is-full v-for = 'i in menu.data[deck.select].export()' :title = '`${i.title} : ${i.content.length}`' v-show = '!deck.chk.reload'>
                     <image class = 'deck_cards' v-for = '(j, k) in i.content' :src = '`https://cdn.233.momobako.com/ygopro/pics/${j}.jpg!half`' mode = 'aspectFit' @error = 'changeImg(i, k)'></image>
                 </uni-card>
             </view>
@@ -215,7 +215,7 @@
     });
 
     let menu = reactive({
-        data : [] as Array<DeckObject>,
+        data : [] as Array<Deck>,
         select : {
             data : [{
                 text: '无排序',
@@ -296,40 +296,53 @@
             reload : false,
             eye : true
         },
-        app : new Deck(),
+        select : -1,
         pattern: {
             buttonColor: '#ecf5ff',
             iconColor: '#409eff',
             icon : 'closeempty'
         },
-        on : async (i : DeckObject) : Promise<void> => {
+        on : async (i : Deck, v : number) : Promise<void> => {
             if (!page.menu) return;
             page.menu = false;
-            const response = await onlineDecks.getDeck(i.deckId);
-            await deck.app.read(response, i);
+            if (i.content.length == 0) {
+                const response = await onlineDecks.getDeck(i.id);
+                i.read(response);
+            }
+            deck.select = v;
             await (new Promise(resolve => setTimeout(resolve, 500)));
             page.deck = true;
         },
         off : async () : Promise<void> => {
             if (!page.deck) return;
             page.deck = false;
-            deck.app.clear();
+            deck.select = -1;
             await (new Promise(resolve => setTimeout(resolve, 500)));
             page.menu = true;
         },
         upload : async () : Promise<void> => {
             if (mc.get.user.id == 0) return;
             await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
+                const i = await onlineDecks.getMyList(mc.get.user.id, mc.get.token);
+                menu.data = i.menu;
+                menu.total = i.total;
                 const name : string = res.tempFiles[0].name.split('.')[0];
                 const content : string = await Uniapp.readFile(res.tempFiles[0]);
-                await deck.app.read(content, {
+                deck.select = menu.data.length;
+                menu.data.push(new Deck({
                     deckId : '',
                     deckName : name,
                     userId : mc.get.user.id,
                     deckContributor : mc.get.user.username
-                } as DeckObject);
+                } as DeckObject));
+                menu.data[deck.select].read(content);
                 mc.form.cache = 'page.deck';
                 mc.form.off();
+                uni.showModal({
+                    title : '已覆盖新的卡组',
+                    content : '需要点击上传才能保存到云端哦',
+                    showCancel : false
+                })
             });
         },
         update : async () : Promise<void> => {
@@ -342,19 +355,14 @@
                     content : '需要点击上传才能保存到云端哦',
                     showCancel : false
                 })
-                await deck.app.read(content, {
-                    deckId : deck.app.id,
-                    deckName : deck.app.name,
-                    userId : mc.get.user.id,
-                    deckContributor : deck.app.contributor
-                } as DeckObject);
+                menu.data[deck.select].read(content);
                 deck.chk.reload = false;
             });
         },
         save : async () : Promise<void> => {
             if (deck.chk.save || mc.get.user.id == 0) return;
             deck.chk.save = true;
-            await onlineDecks.upload(deck.app, mc.get, {
+            await onlineDecks.upload(menu.data[deck.select], mc.get, {
                 error : (error : { message : string}) :void => {
                     uni.showModal({
                         title : '上传卡组失败',
@@ -366,20 +374,20 @@
                     page.deck = false;
                     await (new Promise(resolve => setTimeout(resolve, 500)));
                     await search.mydecks();
-                    if (!menu.data.some(i => i.deckId == id))
-                        menu.data.push({
-                            deckCase : deck.app.case,
-                            deckContributor : deck.app.contributor,
-                            deckCoverCard1 : deck.app.cover[0],
-                            deckCoverCard2 : deck.app.cover[1],
-                            deckCoverCard3 : deck.app.cover[2],
-                            deckId : deck.app.id,
+                    if (!menu.data.some(i => i.id == id))
+                        menu.data.push(new Deck({
+                            deckCase : menu.data[deck.select].case,
+                            deckContributor : menu.data[deck.select].contributor,
+                            deckCoverCard1 : menu.data[deck.select].cover[0],
+                            deckCoverCard2 : menu.data[deck.select].cover[1],
+                            deckCoverCard3 : menu.data[deck.select].cover[2],
+                            deckId : menu.data[deck.select].id,
                             deckLike : 0,
-                            deckName : deck.app.name,
-                            deckProtector : deck.app.protector,
+                            deckName : menu.data[deck.select].name,
+                            deckProtector : menu.data[deck.select].protector,
                             lastDate: getCurrentDate(),
                             userId : mc.get.user.id,
-                        })
+                        }))
                     deck.chk.save = false;
                 },
             })
@@ -390,7 +398,7 @@
                 title : '确认要删除吗？',
                 success : async () => {
                     deck.chk.save = true;
-                    await onlineDecks.upload(deck.app, mc.get, {
+                    await onlineDecks.upload(menu.data[deck.select], mc.get, {
                         error : (error : { message : string}) : void => {
                             uni.showModal({
                                 title : '删除卡组失败',
@@ -400,10 +408,11 @@
                         },
                         success : async (id : string) : Promise<void> => {
                             page.deck = false;
-                            deck.app.clear();
+                            menu.data.splice(deck.select, 1);
+                            deck.select = 0;
                             await (new Promise(resolve => setTimeout(resolve, 500)));
                             await search.mydecks();
-                            const index : number = menu.data.findIndex(i => i.deckId == id)
+                            const index : number = menu.data.findIndex(i => i.id == id)
                             if (index > -1) {
                                 menu.data.splice(index, 1);
                             }
@@ -417,27 +426,27 @@
         public : async () : Promise<void> => {
             if (deck.chk.save || mc.get.user.id == 0) return;
             deck.chk.save = true;
-            await onlineDecks.public(deck.app.public, mc.get.user.id, deck.app.id, mc.get.token, {
+            await onlineDecks.public(menu.data[deck.select].public, mc.get.user.id, menu.data[deck.select].id, mc.get.token, {
                 error : (error : { message : string}) : void => {
                     uni.showModal({
-                        title : deck.app.public ? '隐藏卡组失败' : '公开卡组失败',
+                        title : menu.data[deck.select].public ? '隐藏卡组失败' : '公开卡组失败',
                         content : error.message,
                         showCancel : false
                     })
                 },
                 success : (pub : boolean) : void => {
-                    deck.app.public = pub;
+                    menu.data[deck.select].public = pub;
                     deck.chk.save = false;
                 },
             })
         },
         download : async () : Promise<void> => {
-            await Download.start(deck.app.printBlob(), deck.app.name);
+            await Download.start(menu.data[deck.select].printBlob(), menu.data[deck.select].name);
         },
         like : {
             icon : 'hand-up',
             on : async () : Promise<void> => {
-                if (await onlineDecks.like(deck.app.id)) {
+                if (await onlineDecks.like(menu.data[deck.select].id)) {
                     deck.like.icon = 'hand-up-filled';
                     setTimeout(() => {
                         deck.like.icon = 'hand-up';

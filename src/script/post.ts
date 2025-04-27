@@ -80,7 +80,7 @@ class OnlineDecks {
     }
 
     getList = async (obj : postObject) : Promise<{
-        menu : Array<DeckObject>;
+        menu : Array<Deck>;
         total : number
     }>  => {
         let response : { data : { data : { records : Array<DeckObject>, total : number}}};
@@ -98,8 +98,10 @@ class OnlineDecks {
                     'ReqSource': 'MDPro3'
                 }
             });
+            let menu : Array<Deck> = [];
+            response.data.data.records.forEach(i => menu.push(new Deck(i)));
             return {
-                menu : response.data.data.records,
+                menu : menu,
                 total : response.data.data.total
             };
         } catch(error) {
@@ -139,7 +141,7 @@ class OnlineDecks {
         }
     };
     getMyList = async (userId : number, token : string) : Promise<{
-        menu : Array<DeckObject>;
+        menu : Array<Deck>;
         total : number
     }>  => {
         let response : { data : { data : Array<DeckObject>}};
@@ -150,8 +152,10 @@ class OnlineDecks {
                     'token': token
                 }
             });
+            let menu : Array<Deck> = [];
+            response.data.data.forEach(i => menu.push(new Deck(i)));
             return {
-                menu : response.data.data,
+                menu : menu,
                 total : response.data.data.length
             };
         } catch(error) {
