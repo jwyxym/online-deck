@@ -2,9 +2,9 @@ import { reactive } from 'vue';
 import { DeckObject } from './post.ts';
 
 class Deck {
-    main : Array<string> = [];
-    extra : Array<string> = [];
-    side : Array<string> = [];
+    main : Array<number> = [];
+    extra : Array<number> = [];
+    side : Array<number> = [];
     id : string = '';
     name : string = '';
     content : string = '';
@@ -34,9 +34,9 @@ class Deck {
         const mainDeck = deck.match(/#main\r?\n([\s\S]+?)\r?\n#extra/);
         const extraDeck = deck.match(/#extra\r?\n([\s\S]+?)\r?\n!side/);
         const sideDeck = deck.match(/!side\r?\n([\s\S]+?)\r?\n#/);
-        this.main = mainDeck ? mainDeck[1].trim().split(/\r?\n/).map(String) : [];
-        this.extra = extraDeck ? extraDeck[1].trim().split(/\r?\n/).map(String) : [];
-        this.side = sideDeck ? sideDeck[1].trim().split(/\r?\n/).map(String) : [];
+        this.main = mainDeck ? mainDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
+        this.extra = extraDeck ? extraDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
+        this.side = sideDeck ? sideDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
         this.id = i.deckId;
         this.name = i.deckName;
         this.contributor = i.deckContributor;
@@ -48,7 +48,7 @@ class Deck {
     };
     export = () : Array<{
         title : string;
-        content : Array<string>
+        content : Array<number>
     }> => {
         return [
             reactive({

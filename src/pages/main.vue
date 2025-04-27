@@ -416,7 +416,6 @@
         },
         public : async () : Promise<void> => {
             if (deck.chk.save || mc.get.user.id == 0) return;
-            console.log(deck.app.public)
             deck.chk.save = true;
             await onlineDecks.public(deck.app.public, mc.get.user.id, deck.app.id, mc.get.token, {
                 error : (error : { message : string}) : void => {
@@ -429,7 +428,6 @@
                 success : (pub : boolean) : void => {
                     deck.app.public = pub;
                     deck.chk.save = false;
-                    console.log(deck.app.public)
                 },
             })
         },
@@ -451,9 +449,9 @@
 
     const changeImg = (i : {
         title : string;
-        content : Array<string>
+        content : Array<number>
     }, v : number) => {
-        i.content[v] = '0';
+        i.content[v] = 0;
     }
 
     const getCurrentDate = () : string => {

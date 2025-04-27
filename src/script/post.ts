@@ -235,7 +235,6 @@ class OnlineDecks {
             if (!response.data.message)
                 throw new Error('更改失败');
             f.success(!pub);
-            console.log(response)
             return !pub;
         } catch(error) {
             console.error(error);
