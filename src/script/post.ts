@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import Deck from './deck.ts';
 
 interface postObject {
@@ -53,12 +53,13 @@ class MyCard {
             data : MyCardObject
         };
         try {
-            response = await axios.post(`${this.url}/accounts/signin`, data);
+            response = await this.url.post(`/accounts/signin`, data);
             return response.data;
         }
         catch(error) {
             console.error(error);
-            f(error);
+            f(error);.0
+            
             return {
                 user : {
                     id : 0,
@@ -73,10 +74,12 @@ class MyCard {
 }
 
 class OnlineDecks {
-    url : string;
+    url : AxiosInstance;
 
     constructor(url : string) {
-        this.url = url;
+        this.url = axios.create({
+            baseURL : url
+        });
     }
 
     getList = async (obj : postObject) : Promise<{
@@ -85,7 +88,7 @@ class OnlineDecks {
     }>  => {
         let response : { data : { data : { records : Array<DeckObject>, total : number}}};
         try {
-            response = await axios.get(`${this.url}/api/mdpro3/deck/list`, {
+            response = await this.url.get(`/api/mdpro3/deck/list`, {
                 params: {
                     size: 20,
                     page: obj.page,
@@ -115,7 +118,7 @@ class OnlineDecks {
     getDeck = async (deckId : string): Promise<string>  => {
         let response : { data : { data : { deckYdk : string}}};
         try {
-            response = await axios.get(`${this.url}/api/mdpro3/deck/${deckId}`, {
+            response = await this.url.get(`/api/mdpro3/deck/${deckId}`, {
                 headers: { 
                     'ReqSource': 'MDPro3'
                 }
@@ -129,7 +132,7 @@ class OnlineDecks {
     like = async (deckId : string): Promise<boolean>  => {
         let response : { data : { code : number}};
         try {
-            response = await axios.post(`${this.url}/api/mdpro3/deck/like/${deckId}`, {}, {
+            response = await this.url.post(`/api/mdpro3/deck/like/${deckId}`, {}, {
                 headers: { 
                     'ReqSource': 'MDPro3'
                 }
@@ -146,7 +149,7 @@ class OnlineDecks {
     }>  => {
         let response : { data : { data : Array<DeckObject>}};
         try {
-            response = await axios.get(`${this.url}/api/mdpro3/sync/${userId}/nodel`, {
+            response = await this.url.get(`/api/mdpro3/sync/${userId}/nodel`, {
                 headers: { 
                     'ReqSource': 'MDPro3',
                     'token': token
@@ -175,7 +178,7 @@ class OnlineDecks {
     }, isDelete : boolean = false) : Promise<string>  => {
         let response : { data : { data : Boolean}};
         try {
-            const id : { data : { data : string; } } = deck.id.length > 0 ? { data : { data : deck.id } } : await axios.get(`${this.url}/api/mdpro3/deck/deckId`, {
+            const id : { data : { data : string; } } = deck.id.length > 0 ? { data : { data : deck.id } } : await this.url.get(`/api/mdpro3/deck/deckId`, {
                 headers: { 
                     'ReqSource': 'MDPro3',
                 }
@@ -187,7 +190,7 @@ class OnlineDecks {
                 return `${ydk}##${id.data}\r\n###${i.user.id}`
             };
 
-            response = await axios.post(`${this.url}/api/mdpro3/sync/single`, {
+            response = await this.url.post(`/api/mdpro3/sync/single`, {
                 deckContributor : i.user.username,
                 userId : i.user.id,
                 deck : {
@@ -226,7 +229,7 @@ class OnlineDecks {
     }) : Promise<boolean>  => {
         let response : { data : { message : boolean}};
         try {
-            response = await axios.post(`${this.url}/api/mdpro3/deck/public`, {
+            response = await this.url.post(`/api/mdpro3/deck/public`, {
                 userId : userId,
                 deckId : deckId,
                 isPublic : !pub

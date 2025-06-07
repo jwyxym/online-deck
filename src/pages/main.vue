@@ -22,13 +22,13 @@
             </uni-card>
             <uni-list id = 'lognin'>
                 <uni-list-chat
-                :avatar-circle = true
-                :title = 'mc.get.user.username'
-                :note = 'mc.get.user.email'
-                :clickable = true
-                :time = "mc.get.user.id <= 0 ? '登陆萌卡' : ''"
-                :avatar = 'mc.get.user.avatar'
-                @click = 'mc.form.on()'
+                    :avatar-circle = true
+                    :title = 'mc.get.user.username'
+                    :note = 'mc.get.user.email'
+                    :clickable = true
+                    :time = "mc.get.user.id <= 0 ? '登陆萌卡' : ''"
+                    :avatar = 'mc.get.user.avatar'
+                    @click = 'mc.form.on()'
                 >
                 </uni-list-chat>
             </uni-list>
