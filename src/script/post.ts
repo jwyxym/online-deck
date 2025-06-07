@@ -42,10 +42,12 @@ interface MyCardSigninObject {
 }
 
 class MyCard {
-    url : string;
+    url : AxiosInstance;
 
     constructor(url : string) {
-        this.url = url;
+        this.url = axios.create({
+            baseURL : url
+        });
     }
 
     signin = async (data : MyCardSigninObject, f : Function = () : void => { return; }) : Promise<MyCardObject> => {
