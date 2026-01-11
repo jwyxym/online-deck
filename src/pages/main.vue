@@ -23,11 +23,11 @@
             <uni-list id = 'lognin'>
                 <uni-list-chat
                     :avatar-circle = true
-                    :title = 'mc.get.user.username'
-                    :note = 'mc.get.user.email'
+                    :title = "Mycard.user?.username ?? ''"
+                    :note = "Mycard.user?.email ?? ''"
                     :clickable = true
-                    :time = "mc.get.user.id <= 0 ? '登陆萌卡' : ''"
-                    :avatar = 'mc.get.user.avatar'
+                    :time = "(Mycard.user?.id ?? 0) <= 0 ? '登陆萌卡' : ''"
+                    :avatar = "Mycard.user?.avatar ?? 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'"
                     @click = 'mc.form.on()'
                 >
                 </uni-list-chat>
@@ -82,50 +82,35 @@
                     <button size = 'mini' @click = 'deck.like.on()' v-show = 'menu.data[menu.selected].user > 0'>
                         <uni-icons :type = 'deck.like.icon'></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.save()' v-show = 'menu.data[menu.selected].user == mc.get.user.id'>
+                    <button size = 'mini' @click = 'deck.save()' v-show = 'menu.data[menu.selected].user == Mycard.user?.id'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'cloud-upload'"></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.del()' v-show = 'menu.data[menu.selected].user == mc.get.user.id && menu.data[menu.selected].id.length > 0'>
+                    <button size = 'mini' @click = 'deck.del()' v-show = 'menu.data[menu.selected].user == Mycard.user?.id && menu.data[menu.selected].id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'trash'"></uni-icons>
                     </button>
-                    <button size = 'mini' @click = 'deck.public()' v-show = 'menu.data[menu.selected].user == mc.get.user.id && menu.data[menu.selected].id.length > 0'>
+                    <button size = 'mini' @click = 'deck.public()' v-show = 'menu.data[menu.selected].user == Mycard.user?.id && menu.data[menu.selected].id.length > 0'>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye'" v-show = 'menu.data[menu.selected].public'></uni-icons>
                         <uni-icons :type = "deck.chk.save ? 'spinner-cycle' : 'eye-slash'" v-show = '!menu.data[menu.selected].public'></uni-icons>
                     </button>
                     <br>
-                    <button size = 'mini' @click = 'deck.update()' v-show = 'menu.data[menu.selected].user == mc.get.user.id'>
+                    <button size = 'mini' @click = 'deck.update()' v-show = 'menu.data[menu.selected].user == Mycard.user?.id'>
                         选择文件覆盖
                     </button>
                 </uni-card>
                 <uni-card class = 'deck_body' is-full v-for = 'i in menu.data[menu.selected].export()' :title = '`${i.title} : ${i.content.length}`' v-show = '!deck.chk.reload'>
-                    <image class = 'deck_cards' v-for = '(j, k) in i.content' :src = '`https://cdn.233.momobako.com/ygopro/pics/${j}.jpg!half`' mode = 'aspectFit' @error = 'changeImg(i, k)'></image>
+                    <image class = 'deck_cards' v-for = '(j, k) in i.content' :src = 'Math.floor(Math.log10(Math.abs(j))) < 8 ? `https://cdn.233.momobako.com/ygopro/pics/${j}.jpg!half` : `https://cdn02.moecube.com:444/ygopro-super-pre/data/pics/${j}.jpg`' mode = 'aspectFit' @error = 'changeImg(i, k)'></image>
                 </uni-card>
             </view>
         </transition>
         <transition name = 'switch'>
             <uni-card id = 'form' v-if = 'page.form'>
-                <uni-forms :modelValue = 'mc.signin_info' v-show = 'mc.get.user.id <= 0'>
-                    <uni-forms-item label = '账号'>
-                        <uni-easyinput type = 'text' v-model = 'mc.signin_info.account' placeholder = '请输入账号' />
-                    </uni-forms-item>
-                    <uni-forms-item label = '密码'>
-                        <uni-easyinput type = 'password' v-model = 'mc.signin_info.password' placeholder = '请输入密码' />
-                    </uni-forms-item>
+                <view v-show = '(Mycard.user?.id ?? 0) > 0'>
+                    <uni-card :title = 'Mycard.user?.username'>{{ Mycard.user?.email }}</uni-card>
+                    <uni-card class = 'button' @click = 'search.mydecks'>我的卡组</uni-card>
+                    <uni-card class = 'button' @click = 'deck.upload'>上传卡组</uni-card>
                     <view id = 'submit'>
-                        <button size = 'mini' @click = 'mc.signin()' v-show = '!mc.chk'>登陆</button>
-                        <button size = 'mini' v-show = 'mc.chk'>
-                            <uni-icons type = 'spinner-cycle'></uni-icons>
-                        </button>
-                        <button size = 'mini' @click = 'mc.form.off()'>关闭</button>
-                    </view>
-                </uni-forms>
-                <view v-show = 'mc.get.user.id > 0'>
-                    <uni-card :title = 'mc.get.user.username'>{{ mc.get.user.email }}</uni-card>
-                    <uni-card class = 'button' @click = 'search.mydecks()'>我的卡组</uni-card>
-                    <uni-card class = 'button' @click = 'deck.upload()'>上传卡组</uni-card>
-                    <view id = 'submit'>
-                        <button size = 'mini' @click = 'mc.signout()'>退出</button>
-                        <button size = 'mini' @click = 'mc.form.off()'>关闭</button>
+                        <button size = 'mini' @click = 'Mycard.logout'>退出</button>
+                        <button size = 'mini' @click = 'mc.form.off'>关闭</button>
                     </view>
                 </view>
             </uni-card>
@@ -134,64 +119,20 @@
 </template>
 <script setup lang = 'ts'>
     import { ref, reactive, watch, onMounted } from 'vue';
-    import { onlineDecks, postObject, DeckObject, MC, MyCardObject, MyCardSigninObject } from '../script/post.ts';
+    import { onlineDecks, postObject, DeckObject } from '../script/post.ts';
     import Deck from '../script/deck.ts';
     import Uniapp from '../script/uniapp.ts';
     import Download from '../script/download.js';
+    import Mycard from '../script/mycard.ts';
 
-    let mc = reactive({
-        chk : false,
-        signin : async () : Promise<void> => {
-            if (mc.chk) return;
-            mc.chk = true;
-            if (mc.signin_info.account.length <= 0 || mc.signin_info.password.length <= 0) return;
-            mc.get = await MC.signin(mc.signin_info, (error : { message : string; }) => {
-                uni.showModal({
-                    title : '登陆失败',
-                    content : error.message,
-                    showCancel : false
-                })
-            });
-            mc.chk = false;
-        },
-        signout  : async () : Promise<void> => {
-            mc.get = {
-                user : {
-                    id : 0,
-                    username : '',
-                    email : '',
-                    avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
-                },
-                token : '',
-                error : ''
-            } as MyCardObject;
-            await mc.form.off();
-        },
-        signin_info : {
-            account : '',
-            password : ''
-        } as MyCardSigninObject,
-        get : {
-            user : {
-                id : 0,
-                username : '',
-                email : '',
-                avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
-            },
-            token : ''
-        } as MyCardObject,
-        clear : () : void => {
-            mc.get = {
-                user : {
-                    username : '',
-                    email : '',
-                    avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
-                }
-            } as MyCardObject;
-        },
+    const mc = reactive({
         form : {
             cache : '',
             on : async() : Promise<void> => {
+                if (!Mycard.user) {
+                    Mycard.login();
+                    return;
+                }
                 mc.form.cache = (page.menu ? 'page.menu' : 'page.deck');
                 page.menu = false;
                 page.deck = false;
@@ -270,9 +211,9 @@
             search.reset();
         },
         mydecks : async() : Promise<void> => {
-            if (search.isLoading() || mc.get.user.id == 0) return;
+            if (search.isLoading() || Mycard.user!.id == 0) return;
             search.loading();
-            const i = await onlineDecks.getMyList(mc.get.user.id, mc.get.token);
+            const i = await onlineDecks.getMyList(Mycard.user!.id, Mycard.user!.token);
             menu.data = i.menu;
             menu.total = i.total;
             search.reset();
@@ -321,9 +262,9 @@
             page.menu = true;
         },
         upload : async () : Promise<void> => {
-            if (mc.get.user.id == 0) return;
+            if (!Mycard.user) return;
             await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
-                const i = await onlineDecks.getMyList(mc.get.user.id, mc.get.token);
+                const i = await onlineDecks.getMyList(Mycard.user!.id, Mycard.user!.token);
                 menu.data = i.menu;
                 menu.total = i.total;
                 const name : string = res.tempFiles[0].name.split('.')[0];
@@ -332,8 +273,8 @@
                 menu.data.push(new Deck({
                     deckId : '',
                     deckName : name,
-                    userId : mc.get.user.id,
-                    deckContributor : mc.get.user.username
+                    userId : Mycard.user!.id,
+                    deckContributor : Mycard.user!.username
                 } as DeckObject));
                 menu.data[menu.selected].read(content);
                 mc.form.cache = 'page.deck';
@@ -346,7 +287,7 @@
             });
         },
         update : async () : Promise<void> => {
-            if (mc.get.user.id == 0) return;
+            if (!Mycard.user) return;
             await Uniapp.selectFile('ydk', async (res : UniApp.ChooseFileSuccessCallbackResult) => {
                 const content : string = await Uniapp.readFile(res.tempFiles[0]);
                 deck.chk.reload = true;
@@ -360,9 +301,9 @@
             });
         },
         save : async () : Promise<void> => {
-            if (deck.chk.save || mc.get.user.id == 0) return;
+            if (deck.chk.save || !Mycard.user) return;
             deck.chk.save = true;
-            await onlineDecks.upload(menu.data[menu.selected], mc.get, {
+            await onlineDecks.upload(menu.data[menu.selected], {
                 error : (error : { message : string}) :void => {
                     uni.showModal({
                         title : '上传卡组失败',
@@ -393,40 +334,42 @@
             })
         },
         del : () : void => {
-            if (deck.chk.save || mc.get.user.id == 0) return;
+            if (deck.chk.save || !Mycard.user) return;
             uni.showModal({
                 title : '确认要删除吗？',
-                success : async () => {
-                    deck.chk.save = true;
-                    await onlineDecks.upload(menu.data[menu.selected], mc.get, {
-                        error : (error : { message : string}) : void => {
-                            uni.showModal({
-                                title : '删除卡组失败',
-                                content : error.message,
-                                showCancel : false
-                            })
-                        },
-                        success : async (id : string) : Promise<void> => {
-                            page.deck = false;
-                            menu.data.splice(menu.selected, 1);
-                            menu.selected = 0;
-                            await (new Promise(resolve => setTimeout(resolve, 500)));
-                            await search.mydecks();
-                            const index : number = menu.data.findIndex(i => i.id == id)
-                            if (index > -1) {
-                                menu.data.splice(index, 1);
-                            }
-                            deck.chk.save = false;
-                        },
+                success : async (res : { confirm : boolean; }) => {
+                    if (res.confirm) {
+                        deck.chk.save = true;
+                        await onlineDecks.upload(menu.data[menu.selected], {
+                            error : (error : { message : string}) : void => {
+                                uni.showModal({
+                                    title : '删除卡组失败',
+                                    content : error.message,
+                                    showCancel : false
+                                })
+                            },
+                            success : async (id : string) : Promise<void> => {
+                                page.deck = false;
+                                menu.data.splice(menu.selected, 1);
+                                menu.selected = 0;
+                                await (new Promise(resolve => setTimeout(resolve, 500)));
+                                await search.mydecks();
+                                const index : number = menu.data.findIndex(i => i.id == id)
+                                if (index > -1) {
+                                    menu.data.splice(index, 1);
+                                }
+                                deck.chk.save = false;
+                            },
+                        }
+                        , true)
                     }
-                    , true)
                 }
             })
         },
         public : async () : Promise<void> => {
-            if (deck.chk.save || mc.get.user.id == 0) return;
+            if (deck.chk.save || !Mycard.user) return;
             deck.chk.save = true;
-            await onlineDecks.public(menu.data[menu.selected].public, mc.get.user.id, menu.data[menu.selected].id, mc.get.token, {
+            await onlineDecks.public(menu.data[menu.selected].public, Mycard.user!.id, menu.data[menu.selected].id, mc.get.token, {
                 error : (error : { message : string}) : void => {
                     uni.showModal({
                         title : menu.data[menu.selected].public ? '隐藏卡组失败' : '公开卡组失败',

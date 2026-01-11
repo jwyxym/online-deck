@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import Deck from './deck.ts';
+import Mycard from './mycard.ts';
 
 interface postObject {
     page : number;
@@ -22,57 +23,6 @@ interface DeckObject {
     deckProtector ?: number;
     lastDate ?: string;
     public ?: boolean;
-}
-
-interface User {
-    id : number;
-    username : string;
-    email : string;
-    avatar : string;
-}
-
-interface MyCardObject {
-    user : User;
-    token : string;
-}
-
-interface MyCardSigninObject {
-    account : string,
-    password : string
-}
-
-class MyCard {
-    url : AxiosInstance;
-
-    constructor(url : string) {
-        this.url = axios.create({
-            baseURL : url
-        });
-    }
-
-    signin = async (data : MyCardSigninObject, f : Function = () : void => { return; }) : Promise<MyCardObject> => {
-        let response : {
-            data : MyCardObject
-        };
-        try {
-            response = await this.url.post(`/accounts/signin`, data);
-            return response.data;
-        }
-        catch(error) {
-            console.error(error);
-            f(error);.0
-            
-            return {
-                user : {
-                    id : 0,
-                    username : '',
-                    email : '',
-                    avatar : 'https://cdn02.moecube.com:444/accounts/default_avatar.jpg'
-                },
-                token : '',
-            } as MyCardObject;
-        }
-    }
 }
 
 class OnlineDecks {
@@ -171,13 +121,15 @@ class OnlineDecks {
             };
         }
     };
-    upload = async (deck : Deck, i : MyCardObject, f : {
+    upload = async (deck : Deck, f : {
         success : Function,
         error : Function
     } = {
         success : () : void => { return; },
         error : () : void => { return; }
     }, isDelete : boolean = false) : Promise<string>  => {
+        if (!Mycard.user)
+            f.error('未登录');
         let response : { data : { data : Boolean}};
         try {
             const id : { data : { data : string; } } = deck.id.length > 0 ? { data : { data : deck.id } } : await this.url.get(`/api/mdpro3/deck/deckId`, {
@@ -189,12 +141,12 @@ class OnlineDecks {
                 throw new Error('卡组id获取失败');
 
             const toDeck = (ydk : string) : string => {
-                return `${ydk}##${id.data}\r\n###${i.user.id}`
+                return `${ydk}##${id.data}\r\n###${Mycard.user!.id}`
             };
 
             response = await this.url.post(`/api/mdpro3/sync/single`, {
-                deckContributor : i.user.username,
-                userId : i.user.id,
+                deckContributor : Mycard.user!.username,
+                userId : Mycard.user!.id,
                 deck : {
                     deckId : id.data.data,
                     deckName : deck.name,
@@ -204,12 +156,14 @@ class OnlineDecks {
                     deckCase :  deck.case,
                     deckProtector :  deck.protector,
                     deckYdk : toDeck(deck.content),
-                    isDelete : isDelete
+                    isDelete : isDelete,
+                    timestamp: Date.now(),
+                    deckType: ""
                 }
             }, {
                 headers: { 
                     'ReqSource': 'MDPro3',
-                    'token': i.token,
+                    'token': Mycard.token,
                 }
             });
             if (!response.data.data)
@@ -255,13 +209,9 @@ class OnlineDecks {
 }
 
 const onlineDecks = new OnlineDecks('https://zgai.tech:38443');
-const MC = new MyCard('https://sapi.moecube.com');
 
 export {
     postObject,
     DeckObject,
-    onlineDecks,
-    MyCardObject,
-    MyCardSigninObject,
-    MC
+    onlineDecks
 };

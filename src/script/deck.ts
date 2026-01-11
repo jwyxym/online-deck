@@ -31,10 +31,11 @@ class Deck {
         this.read(deck);
     }
     read = (deck : string) : void => {
-        this.content = deck.replace(/^#{2,3}.*$\r?\n?/gm, '');
-        const mainDeck = deck.match(/#main\r?\n([\s\S]+?)\r?\n#extra/);
-        const extraDeck = deck.match(/#extra\r?\n([\s\S]+?)\r?\n!side/);
-        const sideDeck = deck.match(/!side\r?\n([\s\S]+?)\r?\n#/);
+        this.content = deck;
+        const ydk = deck.replace(/^#{2,3}.*$\r?\n?/gm, '');
+        const mainDeck = ydk.match(/#main\r?\n([\s\S]+?)\r?\n#extra/);
+        const extraDeck = ydk.match(/#extra\r?\n([\s\S]+?)\r?\n!side/);
+        const sideDeck = ydk.match(/!side\r?\n([\s\S]+?)\r?\n#/);
         this.main = mainDeck ? mainDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
         this.extra = extraDeck ? extraDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
         this.side = sideDeck ? sideDeck[1].trim().split(/\r?\n/).map(Number).filter(id => !isNaN(id)) : [];
