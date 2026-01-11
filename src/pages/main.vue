@@ -155,7 +155,7 @@
         }
     });
 
-    let menu = reactive({
+    const menu = reactive({
         data : [] as Array<Deck>,
         selected : -1,
         select : {
@@ -181,7 +181,7 @@
         total : 0 as number
     });
 
-    let search = reactive({
+    const search = reactive({
         pattern: {
             buttonColor: '#ecf5ff',
             iconColor: '#409eff',
@@ -226,13 +226,13 @@
         }
     });
 
-    let page = reactive({
+    const page = reactive({
         menu : true,
         deck : false,
         form : false
     });
 
-    let deck = reactive({
+    const deck = reactive({
         chk : {
             save : false,
             reload : false,
@@ -414,7 +414,7 @@
         return `${year}-${month}-${day}`;
     }
 
-    let size = ref(0);
+    const size = ref(0);
 
     watch(() : number => { return menu.select.chk }, (n) : void => {
         menu.search_info.sortLike = n == 1;
