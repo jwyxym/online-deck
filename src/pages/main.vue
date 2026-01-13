@@ -55,7 +55,7 @@
                     >
                         <template v-slot:header>
                             <image
-                                :src = '`https://images.ygoprodeck.com/images/cards_cropped/${i.cover[0]}.jpg`'
+                                :src = '`https://api.jwyxym.top/pics/ygo-center//${i.cover[0]}.jpg`'
                                 :style = "{ '--size' : `${size}px` }"
                             ></image>
                             <view style = 'width: 2%;'></view>
